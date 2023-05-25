@@ -10,29 +10,7 @@ const name = pluginPkg.strapi.name;
 
 export default {
   register(app: any) {
-    console.log("registering plugin");
-    app.addMenuLink({
-      to: `/plugins/${pluginId}`,
-      icon: PluginIcon,
-      intlLabel: {
-        id: `${pluginId}.plugin.name`,
-        defaultMessage: name,
-      },
-      Component: async () => {
-        const component = await import(
-          /* webpackChunkName: "[request]" */ "./pages/App"
-        );
 
-        return component;
-      },
-      permissions: [
-        // Uncomment to set the permissions of the plugin here
-        // {
-        //   action: '', // the action name should be plugin::plugin-name.actionType
-        //   subject: null,
-        // },
-      ],
-    });
     const plugin = {
       id: pluginId,
       initializer: Initializer,
@@ -79,8 +57,6 @@ export default {
     });
 
     app.registerPlugin(plugin);
-
-    console.log(app.customFields);
   },
 
   bootstrap(app: any) { },
