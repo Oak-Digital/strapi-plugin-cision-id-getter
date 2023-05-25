@@ -26,3 +26,11 @@ This plugin currently has no configuration options
 ## Contribution
 
 If you find any bugs or have feature request, you are welcome to open an issue or a pull request.
+
+## Publishing
+
+```
+npm version # patch | minor | major
+npm run build
+npm publish
+```
