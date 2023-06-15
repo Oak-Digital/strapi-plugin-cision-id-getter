@@ -5,25 +5,27 @@ import { getNewsFeed } from "../cision/newsfeed";
 
 export const useNewsfeed = (
   newsfeedId: string | number,
-  options: UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsFeed>>, unknown, Awaited<ReturnType<typeof getNewsFeed>>> = {}
+  options: UseInfiniteQueryOptions<
+    Awaited<ReturnType<typeof getNewsFeed>>,
+    unknown,
+    Awaited<ReturnType<typeof getNewsFeed>>
+  > = {}
 ) => {
-  return useInfiniteQuery(
-    [pluginId, "newsfeed"],
-    async ({ pageParam = 1 }) => {
+  return useInfiniteQuery({
+    queryFn: async ({ pageParam = 1 }) => {
       return await getNewsFeed(newsfeedId, pageParam);
     },
-    {
-      staleTime: Infinity,
-      getNextPageParam: (lastPage, pages) => {
-        if (lastPage.Releases.length < 50) {
-          return undefined;
-        }
+    queryKey: [pluginId, "newsfeed"],
+    staleTime: Infinity,
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.Releases.length < 50) {
+        return undefined;
+      }
 
-        return pages.length + 1;
-      },
-      ...options,
-    }
-  );
+      return pages.length + 1;
+    },
+    ...options,
+  });
 };
 
 type IdState =
