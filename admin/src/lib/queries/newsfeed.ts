@@ -18,7 +18,7 @@ export const useNewsfeed = (
     queryKey: [pluginId, "newsfeed"],
     staleTime: Infinity,
     getNextPageParam: (lastPage, pages) => {
-      if (lastPage.Releases.length < 50) {
+      if (!lastPage?.Releases || lastPage.Releases.length < 50) {
         return undefined;
       }
 
@@ -27,6 +27,20 @@ export const useNewsfeed = (
     ...options,
   });
 };
+
+export const useEntireNewsfeed = (
+  newsfeedId: string | number,
+) => {
+  const query = useNewsfeed(
+    newsfeedId);
+  const { hasNextPage, fetchNextPage, isLoading } = query;
+
+  if (hasNextPage && !isLoading) {
+    fetchNextPage();
+  }
+
+  return query;
+}
 
 type IdState =
   | { valid: false }

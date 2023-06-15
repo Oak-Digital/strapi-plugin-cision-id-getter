@@ -56,6 +56,20 @@ export default {
       },
     });
 
+    app.addMenuLink({
+      to: `/plugins/${pluginId}`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: `${pluginId}.plugin.name`,
+        defaultMessage: "Cision",
+      },
+      Component: async () => {
+        const component = await import(/* webpackChunkName: "my-plugin" */ './pages/App');
+        return component;
+      },
+      permissions: [],
+    })
+
     app.registerPlugin(plugin);
   },
 
