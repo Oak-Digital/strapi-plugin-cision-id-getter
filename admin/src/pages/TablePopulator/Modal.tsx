@@ -81,30 +81,33 @@ const TablePopulatorModal: FC<Props> = ({
           onSubmit={async (values) => {
             // console.log(values);
 
-            await Promise.all(
-              selectedReleases.map(async (release) => {
-                const body = Object.entries(values).reduce(
-                  (acc, [attributeName, attributeValue]) => {
-                    if (attributeValue === null) {
-                      return acc;
-                    }
-                    return {
-                      ...acc,
-                      [attributeName]: release[attributeValue],
-                    };
-                  },
-                  {}
-                );
-
-                await request(
-                  `/content-manager/collection-types/${selectedContentType}`,
-                  {
-                    method: "POST",
-                    body,
+            const createEntry = async (release: NewsfeedRelease) => {
+              const body = Object.entries(values).reduce(
+                (acc, [attributeName, attributeValue]) => {
+                  if (attributeValue === null) {
+                    return acc;
                   }
-                );
-              })
-            );
+                  return {
+                    ...acc,
+                    [attributeName]: release[attributeValue],
+                  };
+                },
+                {}
+              );
+
+              await request(
+                `/content-manager/collection-types/${selectedContentType}`,
+                {
+                  method: "POST",
+                  body,
+                }
+              );
+            };
+
+            for (const release of selectedReleases) {
+              await createEntry(release);
+              // TODO: show toast?
+            }
 
             onClose();
           }}
