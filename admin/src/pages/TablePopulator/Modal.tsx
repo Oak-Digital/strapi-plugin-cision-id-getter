@@ -17,6 +17,8 @@ import {
   Flex,
   FieldLabel,
   FieldInput,
+  Checkbox,
+  BaseCheckbox,
 } from "@strapi/design-system";
 import { NewsfeedRelease } from "../../types/cision";
 import {
@@ -40,7 +42,14 @@ const releaseFields: readonly (keyof NewsfeedRelease)[] = [
   "CisionWireUrl",
   "CanonicalUrl",
   "Title",
+  "PublishDate",
+  "LanguageCode",
 ] as const;
+
+type Inputs = {
+  autoPublish: boolean;
+  fields: Record<string, keyof NewsfeedRelease | null>;
+}
 
 const TablePopulatorModal: FC<Props> = ({
   open,
@@ -60,29 +69,34 @@ const TablePopulatorModal: FC<Props> = ({
 
   const attributes = selectedContentTypeData?.schema.attributes;
 
+  const initialFields = Object.entries(attributes ?? {}).reduce(
+    (acc, [attributeName, attribute]) => {
+      return {
+        ...acc,
+        [attributeName]: null,
+      };
+    },
+    {}
+  ) as Record<
+    keyof Exclude<typeof attributes, undefined>,
+    null | (typeof releaseFields)[number]
+  >
+
+  // const FormikTyped = Formik<Inputs>
+
   return (
     <>
       {open && (
         <Formik
-          initialValues={
-            Object.entries(attributes ?? {}).reduce(
-              (acc, [attributeName, attribute]) => {
-                return {
-                  ...acc,
-                  [attributeName]: null,
-                };
-              },
-              {}
-            ) as Record<
-              keyof Exclude<typeof attributes, undefined>,
-              null | (typeof releaseFields)[number]
-            >
-          }
+          initialValues={{
+            fields: initialFields,
+            autoPublish: false,
+          }}
           onSubmit={async (values) => {
             // console.log(values);
 
             const createEntry = async (release: NewsfeedRelease) => {
-              const body = Object.entries(values).reduce(
+              const body = Object.entries(values.fields).reduce(
                 (acc, [attributeName, attributeValue]) => {
                   if (attributeValue === null) {
                     return acc;
@@ -95,17 +109,30 @@ const TablePopulatorModal: FC<Props> = ({
                 {}
               );
 
-              await request(
+              const result = await request(
                 `/content-manager/collection-types/${selectedContentType}`,
                 {
                   method: "POST",
                   body,
                 }
               );
+
+              console.log(result);
+              const id = result.id;
+
+              if (values.autoPublish) {
+                await request(
+                  `/content-manager/collection-types/${selectedContentType}/${id}/actions/publish`,
+                  {
+                    method: "POST",
+                  }
+                );
+              }
             };
 
             for (const release of selectedReleases) {
               await createEntry(release);
+              console.log('created entry', release);
               // TODO: show toast?
             }
 
@@ -157,7 +184,7 @@ const TablePopulatorModal: FC<Props> = ({
                           {Object.entries(attributes).map(
                             ([attributeName, attribute]) => {
                               return (
-                                <FormikField name={attributeName}>
+                                <FormikField name={`fields.${attributeName}`}>
                                   {({ field }) => (
                                     <Combobox
                                       key={attributeName}
@@ -190,6 +217,15 @@ const TablePopulatorModal: FC<Props> = ({
                         </Flex>
                       </Box>
                     )}
+                    <FormikField name={"autoPublish"}>{({ field }) => (
+                      <Checkbox value={field.value} onChange={(e) => {
+                        const value = e.target.checked;
+                        setFieldValue(field.name, value);
+                      }}>
+                        Auto publish
+                      </Checkbox>
+                    )}
+                    </FormikField>
                   </Flex>
                 </Form>
               </ModalBody>
